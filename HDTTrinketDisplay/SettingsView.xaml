@@ -30,7 +30,7 @@
             <Label Content="Scale" Width="50" Margin="20,0,0,0" />
             <Slider x:Name="SliderScale" DockPanel.Dock="Top"
                     Style="{StaticResource SliderStyle}"
-                    Value="{Binding AnomalyCardScale, Source={x:Static local:Settings.Default}}"/>
+                    Value="{Binding TrinketCardScale, Source={x:Static local:Settings.Default}}"/>
         </DockPanel>
     </StackPanel>
 </UserControl>

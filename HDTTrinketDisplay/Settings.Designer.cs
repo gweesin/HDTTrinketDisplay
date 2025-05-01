@@ -26,36 +26,36 @@ namespace HDTTrinketDisplay {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("630")]
-        public double AnomalyCardTop {
+        public double TrinketCardTop {
             get {
-                return ((double)(this["AnomalyCardTop"]));
+                return ((double)(this["TrinketCardTop"]));
             }
             set {
-                this["AnomalyCardTop"] = value;
+                this["TrinketCardTop"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public double AnomalyCardLeft {
+        public double TrinketCardLeft {
             get {
-                return ((double)(this["AnomalyCardLeft"]));
+                return ((double)(this["TrinketCardLeft"]));
             }
             set {
-                this["AnomalyCardLeft"] = value;
+                this["TrinketCardLeft"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public double AnomalyCardScale {
+        public double TrinketCardScale {
             get {
-                return ((double)(this["AnomalyCardScale"]));
+                return ((double)(this["TrinketCardScale"]));
             }
             set {
-                this["AnomalyCardScale"] = value;
+                this["TrinketCardScale"] = value;
             }
         }
     }

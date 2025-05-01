@@ -5,11 +5,11 @@ using System.Windows.Controls;
 
 namespace HDTTrinketDisplay
 {
-    public class AnomalyDisplayPlugin : IPlugin
+    public class TrinketDisplayPlugin : IPlugin
     {
         public string Name => "HDTTrinketDisplay";
 
-        public string Description => "Displays the current Battlegrounds anomaly on your overlay";
+        public string Description => "Displays the current Battlegrounds trinket on your overlay";
 
         public string ButtonText => "SETTINGS";
 
@@ -21,7 +21,7 @@ namespace HDTTrinketDisplay
 
         private MenuItem CreateMenu()
         {
-            MenuItem settingsMenuItem = new MenuItem { Header = "Anomaly Display Settings" };
+            MenuItem settingsMenuItem = new MenuItem { Header = "Trinket Display Settings" };
 
             settingsMenuItem.Click += (sender, args) =>
             {
@@ -30,25 +30,25 @@ namespace HDTTrinketDisplay
 
             return settingsMenuItem;
         }
-        public AnomalyDisplay anomalyDisplay;
+        public TrinketDisplay TrinketDisplay;
 
         public void OnButtonPress() => SettingsView.Flyout.IsOpen = true;
 
         public void OnLoad()
         {
-            anomalyDisplay = new AnomalyDisplay();
-            GameEvents.OnGameStart.Add(anomalyDisplay.HandleGameStart);
-            GameEvents.OnGameEnd.Add(anomalyDisplay.ClearCard);
+            TrinketDisplay = new TrinketDisplay();
+            GameEvents.OnGameStart.Add(TrinketDisplay.HandleGameStart);
+            GameEvents.OnGameEnd.Add(TrinketDisplay.ClearCard);
 
             // Processing GameStart logic in case plugin was loaded/unloaded after starting a game without restarting HDT
-            anomalyDisplay.HandleGameStart();
+            TrinketDisplay.HandleGameStart();
         }
 
         public void OnUnload()
         {
             Settings.Default.Save();
-            anomalyDisplay.ClearCard();
-            anomalyDisplay = null;
+            TrinketDisplay.ClearCard();
+            TrinketDisplay = null;
         }
 
         public void OnUpdate()

@@ -13,12 +13,12 @@ using ControlzEx.Standard;
 
 namespace HDTTrinketDisplay
 {
-    public class AnomalyDisplay
+    public class TrinketDisplay
     {
         public CardImage CardImage;
         public static MoveCardManager MoveManager;
 
-        public AnomalyDisplay()
+        public TrinketDisplay()
         {
         }
 
@@ -52,8 +52,8 @@ namespace HDTTrinketDisplay
                 CardImage = new CardImage();
 
                 Core.OverlayCanvas.Children.Add(CardImage);
-                Canvas.SetTop(CardImage, Settings.Default.AnomalyCardTop);
-                Canvas.SetLeft(CardImage, Settings.Default.AnomalyCardLeft);
+                Canvas.SetTop(CardImage, Settings.Default.TrinketCardTop);
+                Canvas.SetLeft(CardImage, Settings.Default.TrinketCardLeft);
                 CardImage.Visibility = System.Windows.Visibility.Visible;
 
                 MoveManager = new MoveCardManager(CardImage, SettingsView.IsUnlocked);
@@ -67,9 +67,9 @@ namespace HDTTrinketDisplay
         // On scaling change update the card
         private void SettingsChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            CardImage.RenderTransform = new ScaleTransform(Settings.Default.AnomalyCardScale / 100, Settings.Default.AnomalyCardScale / 100);
-            Canvas.SetTop(CardImage, Settings.Default.AnomalyCardTop);
-            Canvas.SetLeft(CardImage, Settings.Default.AnomalyCardLeft);
+            CardImage.RenderTransform = new ScaleTransform(Settings.Default.TrinketCardScale / 100, Settings.Default.TrinketCardScale / 100);
+            Canvas.SetTop(CardImage, Settings.Default.TrinketCardTop);
+            Canvas.SetLeft(CardImage, Settings.Default.TrinketCardLeft);
         }
 
         public async void HandleGameStart()
@@ -83,16 +83,16 @@ namespace HDTTrinketDisplay
             if (gameEntity == null)
                 return;
 
-            int? anomalyDbfId = BattlegroundsUtils.GetBattlegroundsAnomalyDbfId(gameEntity);
+            int? trinketDbfId = BattlegroundsUtils.GetBattlegroundsAnomalyDbfId(gameEntity);
 
-            if (anomalyDbfId.HasValue)
+            if (trinketDbfId.HasValue)
             {
-                Log.Info("Anomaly DbfId found: " + anomalyDbfId.Value);
-                InitializeView(anomalyDbfId.Value);
+                Log.Info("Trinket DbfId found: " + trinketDbfId.Value);
+                InitializeView(trinketDbfId.Value);
             }
             else
             {
-                Log.Warn("No anomaly DbfId found whereas game is already started !");
+                Log.Warn("No trinket DbfId found whereas game is already started !");
             }
         }
 

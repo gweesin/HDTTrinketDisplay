@@ -15,7 +15,7 @@ namespace HDTTrinketDisplay
     {
         private static Flyout _flyout;
 
-        private AnomalyDisplay AnomalyDisplay;
+        private TrinketDisplay TrinketDisplay;
 
         private readonly int NorgannonDbfId = 103078;
 
@@ -54,19 +54,19 @@ namespace HDTTrinketDisplay
         private void BtnUnlock_Click(object sender, RoutedEventArgs e)
         {
 
-            if (AnomalyDisplay.MoveManager == null && AnomalyDisplay == null)
+            if (TrinketDisplay.MoveManager == null && TrinketDisplay == null)
             {
                 Log.Info("No ongoing game, create a dummy Norgannon card that can be moved around to save the position.");
-                AnomalyDisplay = new AnomalyDisplay();
-                AnomalyDisplay.InitializeView(NorgannonDbfId);
+                TrinketDisplay = new TrinketDisplay();
+                TrinketDisplay.InitializeView(NorgannonDbfId);
                 API.GameEvents.OnGameStart.Add(ClearCardDisplay);
             }
 
-            IsUnlocked = AnomalyDisplay.MoveManager.ToggleUILockState();
-            if (!IsUnlocked && AnomalyDisplay != null)
+            IsUnlocked = TrinketDisplay.MoveManager.ToggleUILockState();
+            if (!IsUnlocked && TrinketDisplay != null)
             {
-                AnomalyDisplay.ClearCard();
-                AnomalyDisplay = null;
+                TrinketDisplay.ClearCard();
+                TrinketDisplay = null;
             }
 
             BtnUnlock.Content = IsUnlocked ? "Lock overlay" : "Unlock overlay";
@@ -74,18 +74,18 @@ namespace HDTTrinketDisplay
 
         private void BtnReset_Click(object sender, RoutedEventArgs e)
         {
-            Settings.Default.AnomalyCardLeft = 0;
-            Settings.Default.AnomalyCardTop = 630;
-            Settings.Default.AnomalyCardScale = 100;
+            Settings.Default.TrinketCardLeft = 0;
+            Settings.Default.TrinketCardTop = 630;
+            Settings.Default.TrinketCardScale = 100;
             Settings.Default.Save();
         }
 
         public void ClearCardDisplay()
         {
-            if (AnomalyDisplay != null)
+            if (TrinketDisplay != null)
             {
-                AnomalyDisplay.ClearCard();
-                AnomalyDisplay = null;
+                TrinketDisplay.ClearCard();
+                TrinketDisplay = null;
             }
         }
     }

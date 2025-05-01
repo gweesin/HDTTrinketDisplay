@@ -82,12 +82,12 @@ namespace HDTTrinketDisplay
             }
 
             var pos = User32.GetMousePos();
-            double mouseVerticalPositionAdjust = (yMouseDeltaFromCard * Settings.Default.AnomalyCardScale / 100);
-            double mouseHorizontalPositionAdjust = (xMouseDeltaFromCard * Settings.Default.AnomalyCardScale / 100);
+            double mouseVerticalPositionAdjust = (yMouseDeltaFromCard * Settings.Default.TrinketCardScale / 100);
+            double mouseHorizontalPositionAdjust = (xMouseDeltaFromCard * Settings.Default.TrinketCardScale / 100);
             var p = Core.OverlayCanvas.PointFromScreen(new Point(pos.X - mouseHorizontalPositionAdjust, pos.Y - mouseVerticalPositionAdjust));
 
-            Settings.Default.AnomalyCardTop = p.Y;
-            Settings.Default.AnomalyCardLeft = p.X;
+            Settings.Default.TrinketCardTop = p.Y;
+            Settings.Default.TrinketCardLeft = p.X;
         }
 
         private bool PointInsideControl(Point p, FrameworkElement control)
