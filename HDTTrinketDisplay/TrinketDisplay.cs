@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static HearthDb.Enums.GameTag;
 using Hearthstone_Deck_Tracker.Enums;
@@ -9,7 +10,7 @@ using Hearthstone_Deck_Tracker.API;
 using System.Windows.Controls;
 using Hearthstone_Deck_Tracker.Controls;
 using System.Windows.Media;
-using ControlzEx.Standard;
+using Hearthstone_Deck_Tracker.Utility.Assets;
 
 namespace HDTTrinketDisplay
 {
@@ -17,6 +18,7 @@ namespace HDTTrinketDisplay
     {
         public CardImage CardImage;
         public static MoveCardManager MoveManager;
+        private IEnumerable<Entity> lastTrinkets = new List<Entity>();
 
         public TrinketDisplay()
         {
@@ -44,32 +46,70 @@ namespace HDTTrinketDisplay
             }
         }
 
-        public void InitializeView(int cardDbfId)
+        public void InitializeView(List<int> cardDbfIds)
         {
-            // Do not recreate card if it already exists via a double call to HandleGameStart() (cf OnLoad)
-            if (CardImage == null)
+            foreach (var cardDbfId in cardDbfIds)
             {
-                CardImage = new CardImage();
+                // Do not recreate card if it already exists via a double call to HandleGameStart() (cf OnLoad)
+                if (CardImage == null)
+                {
+                    CardImage = new CardImage();
 
-                Core.OverlayCanvas.Children.Add(CardImage);
-                Canvas.SetTop(CardImage, Settings.Default.TrinketCardTop);
-                Canvas.SetLeft(CardImage, Settings.Default.TrinketCardLeft);
-                CardImage.Visibility = System.Windows.Visibility.Visible;
+                    Core.OverlayCanvas.Children.Add(CardImage);
+                    Canvas.SetTop(CardImage, Settings.Default.TrinketCardTop);
+                    Canvas.SetLeft(CardImage, Settings.Default.TrinketCardLeft);
+                    CardImage.Visibility = System.Windows.Visibility.Visible;
 
-                MoveManager = new MoveCardManager(CardImage, SettingsView.IsUnlocked);
-                Settings.Default.PropertyChanged += SettingsChanged;
-                SettingsChanged(null, null);
+                    MoveManager = new MoveCardManager(CardImage, SettingsView.IsUnlocked);
+                    Settings.Default.PropertyChanged += SettingsChanged;
+                    SettingsChanged(null, null);
+                }
+
+                var cardFromDbfId = Database.GetCardFromDbfId(cardDbfId, false);
+                CardImage.SetCardIdFromCard(cardFromDbfId);
             }
-
-            CardImage.SetCardIdFromCard(Database.GetCardFromDbfId(cardDbfId, false));
         }
 
         // On scaling change update the card
         private void SettingsChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            CardImage.RenderTransform = new ScaleTransform(Settings.Default.TrinketCardScale / 100, Settings.Default.TrinketCardScale / 100);
+            CardImage.RenderTransform = new ScaleTransform(Settings.Default.TrinketCardScale / 100,
+                Settings.Default.TrinketCardScale / 100);
             Canvas.SetTop(CardImage, Settings.Default.TrinketCardTop);
             Canvas.SetLeft(CardImage, Settings.Default.TrinketCardLeft);
+        }
+
+        public async Task IntervalLoop()
+        {
+            const int delayBetweenAttempts = 1000;
+
+            // Loop until enough heroes are loaded
+            while (true)
+            {
+                await Task.Delay(delayBetweenAttempts);
+
+                DisplayTrinkets();
+            }
+        }
+
+        private void DisplayTrinkets()
+        {
+            var currentTrinkets = Core.Game.Player.Trinkets;
+
+            if (currentTrinkets.Count() != lastTrinkets.Count() ||
+                !currentTrinkets.Select(t => t.Card.DbfId).SequenceEqual(lastTrinkets.Select(t => t.Card.DbfId)))
+            {
+                var trinketDbfIds = currentTrinkets.Select(t => t.Card.DbfId).ToList();
+                Log.Info($"Trinket found: {currentTrinkets}");
+                InitializeView(trinketDbfIds);
+            }
+
+            if (!currentTrinkets.Any())
+            {
+                Log.Warn("No trinket DbfId found whereas game is already started !");
+            }
+
+            lastTrinkets = currentTrinkets.ToList();
         }
 
         public async void HandleGameStart()
@@ -83,17 +123,7 @@ namespace HDTTrinketDisplay
             if (gameEntity == null)
                 return;
 
-            int? trinketDbfId = BattlegroundsUtils.GetBattlegroundsAnomalyDbfId(gameEntity);
-
-            if (trinketDbfId.HasValue)
-            {
-                Log.Info("Trinket DbfId found: " + trinketDbfId.Value);
-                InitializeView(trinketDbfId.Value);
-            }
-            else
-            {
-                Log.Warn("No trinket DbfId found whereas game is already started !");
-            }
+            await IntervalLoop();
         }
 
         public void ClearCard()

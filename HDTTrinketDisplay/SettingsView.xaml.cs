@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-
 using MahApps.Metro.Controls;
 using Hearthstone_Deck_Tracker;
 using System.Collections.Generic;
@@ -30,6 +29,7 @@ namespace HDTTrinketDisplay
                 {
                     _flyout = CreateSettingsFlyout();
                 }
+
                 return _flyout;
             }
         }
@@ -49,16 +49,19 @@ namespace HDTTrinketDisplay
         {
             InitializeComponent();
         }
+
         public IEnumerable<Orientation> OrientationTypes => Enum.GetValues(typeof(Orientation)).Cast<Orientation>();
 
         private void BtnUnlock_Click(object sender, RoutedEventArgs e)
         {
-
             if (TrinketDisplay.MoveManager == null && TrinketDisplay == null)
             {
-                Log.Info("No ongoing game, create a dummy Norgannon card that can be moved around to save the position.");
+                Log.Info(
+                    "No ongoing game, create a dummy Norgannon card that can be moved around to save the position.");
                 TrinketDisplay = new TrinketDisplay();
-                TrinketDisplay.InitializeView(NorgannonDbfId);
+                var norgannonDbfIds = new List<int> { NorgannonDbfId };
+                TrinketDisplay.InitializeView(norgannonDbfIds);
+                API.GameEvents.OnGameStart.Add(ClearCardDisplay);
                 API.GameEvents.OnGameStart.Add(ClearCardDisplay);
             }
 
