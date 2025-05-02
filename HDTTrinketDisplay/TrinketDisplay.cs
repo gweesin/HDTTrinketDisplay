@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static HearthDb.Enums.GameTag;
 using Hearthstone_Deck_Tracker.Enums;
@@ -9,14 +10,15 @@ using Hearthstone_Deck_Tracker.API;
 using System.Windows.Controls;
 using Hearthstone_Deck_Tracker.Controls;
 using System.Windows.Media;
-using ControlzEx.Standard;
+using Hearthstone_Deck_Tracker.Utility.Assets;
 
 namespace HDTTrinketDisplay
 {
     public class TrinketDisplay
     {
-        public CardImage CardImage;
+        public List<CardImage> CardImages = new List<CardImage>();
         public static MoveCardManager MoveManager;
+        private IEnumerable<Entity> lastTrinkets = new List<Entity>();
 
         public TrinketDisplay()
         {
@@ -44,32 +46,97 @@ namespace HDTTrinketDisplay
             }
         }
 
-        public void InitializeView(int cardDbfId)
+        public void InitializeView(List<int> cardDbfIds)
         {
-            // Do not recreate card if it already exists via a double call to HandleGameStart() (cf OnLoad)
-            if (CardImage == null)
+            for (int i = 0; i < cardDbfIds.Count; i++)
             {
-                CardImage = new CardImage();
+                if (i < CardImages.Count)
+                {
+                    // update CardImage with existing instance
+                    var cardImage = CardImages[i];
+                    var cardFromDbfId = Database.GetCardFromDbfId(cardDbfIds[i], false);
+                    cardImage.SetCardIdFromCard(cardFromDbfId);
+                    cardImage.Visibility = System.Windows.Visibility.Visible;
+                }
+                else
+                {
+                    // create new CardImage instance
+                    var cardImage = new CardImage();
+                    Core.OverlayCanvas.Children.Add(cardImage);
+                    Canvas.SetTop(cardImage, Settings.Default.TrinketCardTop);
+                    Canvas.SetLeft(cardImage, Settings.Default.TrinketCardLeft);
+                    cardImage.Visibility = System.Windows.Visibility.Visible;
 
-                Core.OverlayCanvas.Children.Add(CardImage);
-                Canvas.SetTop(CardImage, Settings.Default.TrinketCardTop);
-                Canvas.SetLeft(CardImage, Settings.Default.TrinketCardLeft);
-                CardImage.Visibility = System.Windows.Visibility.Visible;
+                    cardImage.RenderTransform = new ScaleTransform(Settings.Default.TrinketCardScale / 100,
+                        Settings.Default.TrinketCardScale / 100);
 
-                MoveManager = new MoveCardManager(CardImage, SettingsView.IsUnlocked);
+                    var cardFromDbfId = Database.GetCardFromDbfId(cardDbfIds[i], false);
+                    cardImage.SetCardIdFromCard(cardFromDbfId);
+
+                    CardImages.Add(cardImage);
+                }
+            }
+
+            // hide any remaining CardImages
+            for (int i = cardDbfIds.Count; i < CardImages.Count; i++)
+            {
+                CardImages[i].Visibility = System.Windows.Visibility.Hidden;
+            }
+
+            if (MoveManager == null)
+            {
+                MoveManager = new MoveCardManager(CardImages.FirstOrDefault(), SettingsView.IsUnlocked);
                 Settings.Default.PropertyChanged += SettingsChanged;
                 SettingsChanged(null, null);
             }
-
-            CardImage.SetCardIdFromCard(Database.GetCardFromDbfId(cardDbfId, false));
         }
 
         // On scaling change update the card
         private void SettingsChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            CardImage.RenderTransform = new ScaleTransform(Settings.Default.TrinketCardScale / 100, Settings.Default.TrinketCardScale / 100);
-            Canvas.SetTop(CardImage, Settings.Default.TrinketCardTop);
-            Canvas.SetLeft(CardImage, Settings.Default.TrinketCardLeft);
+            var offset = 0;
+            foreach (var cardImage in CardImages)
+            {
+                cardImage.RenderTransform = new ScaleTransform(Settings.Default.TrinketCardScale / 100,
+                    Settings.Default.TrinketCardScale / 100);
+                Canvas.SetTop(cardImage, Settings.Default.TrinketCardTop + offset);
+                Canvas.SetLeft(cardImage, Settings.Default.TrinketCardLeft);
+
+                offset += 100;
+            }
+        }
+
+        public async Task IntervalLoop()
+        {
+            const int delayBetweenAttempts = 1000;
+
+            // Loop until enough heroes are loaded
+            while (true)
+            {
+                await Task.Delay(delayBetweenAttempts);
+
+                DisplayTrinkets();
+            }
+        }
+
+        private void DisplayTrinkets()
+        {
+            var currentTrinkets = Core.Game.Player.Trinkets;
+
+            if (currentTrinkets.Count() != lastTrinkets.Count() ||
+                !currentTrinkets.Select(t => t.Card.DbfId).SequenceEqual(lastTrinkets.Select(t => t.Card.DbfId)))
+            {
+                var trinketDbfIds = currentTrinkets.Select(t => t.Card.DbfId).ToList();
+                Log.Info($"Trinket found: {currentTrinkets}");
+                InitializeView(trinketDbfIds);
+            }
+
+            // if (!currentTrinkets.Any())
+            // {
+            //     Log.Warn("No trinket DbfId found whereas game is already started !");
+            // }
+
+            lastTrinkets = currentTrinkets.ToList();
         }
 
         public async void HandleGameStart()
@@ -83,28 +150,25 @@ namespace HDTTrinketDisplay
             if (gameEntity == null)
                 return;
 
-            int? trinketDbfId = BattlegroundsUtils.GetBattlegroundsAnomalyDbfId(gameEntity);
-
-            if (trinketDbfId.HasValue)
-            {
-                Log.Info("Trinket DbfId found: " + trinketDbfId.Value);
-                InitializeView(trinketDbfId.Value);
-            }
-            else
-            {
-                Log.Warn("No trinket DbfId found whereas game is already started !");
-            }
+            await IntervalLoop();
         }
 
         public void ClearCard()
         {
-            CardImage.SetCardIdFromCard(null);
-            Core.OverlayCanvas.Children.Remove(CardImage);
-            CardImage = null;
+            foreach (var cardImage in CardImages)
+            {
+                cardImage.SetCardIdFromCard(null);
+                Core.OverlayCanvas.Children.Remove(cardImage);
+            }
 
-            Log.Info("Destroying the MoveManager...");
-            MoveManager.Dispose();
-            MoveManager = null;
+            CardImages.Clear();
+
+            if (MoveManager != null)
+            {
+                Log.Info("Destroying the MoveManager...");
+                MoveManager.Dispose();
+                MoveManager = null;
+            }
 
             Settings.Default.PropertyChanged -= SettingsChanged;
         }
