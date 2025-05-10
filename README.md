@@ -13,6 +13,9 @@ Enhance your Hearthstone Battlegrounds streaming experience with the HDT Trinket
 - **Localization**: Display the trinket card in your own language using HDT settings (Options > Tracker > General > Card language).
 - **Plug-and-Play**: With its user-friendly setup, all you have to do is enable the plugin, and you're good to go—no complicated configurations needed.
 
+## Sample
+
+![sample.png](sample.png)
 
 ## Usage
 
